@@ -1,3 +1,3 @@
 # Otto lernt
 
-Lernseite für Otto (Mathematik). Wird von Claude gebaut.
+Lernseite (Mathematik). Eine Datei: `index.html`.

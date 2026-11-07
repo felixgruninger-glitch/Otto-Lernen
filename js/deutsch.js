@@ -11,6 +11,7 @@ const ORDER_D={
 const TRACK_NAME={G:"Grammatik",R:"Rechtschreibung",W:"Wortschatz",L:"Lesen"};
 
 Object.assign(ERR,{
+  kompositum:"Bei zusammengesetzten Nomen bestimmt immer das LETZTE Wort den Artikel: der Fußball + der Schuh → der Fußballschuh.",
   genus:"Falscher Artikel. Lern das Nomen immer mit Artikel – wie einen Namen: der Ball, die Tasche, das Tor.",
   kasus:"Der Fall stimmt nicht. Frag nach dem Satzglied: Wen oder was? → Akkusativ. Wem? → Dativ.",
   praep:"Diese Präposition verlangt einen anderen Fall. Schau auf den Spickzettel: Dativ- oder Akkusativ-Präposition?",
@@ -45,7 +46,7 @@ Object.assign(ERR,{
 const uniq=a=>[...new Set(a)];
 function mcItem(o){ // o: {prompt, right, wrong[], err, hint, sol, fig?, txt?, listen?}
   const opts=shuffle(uniq([o.right,...o.wrong.filter(w=>w!==o.right)].slice(0,o.max||4)));
-  return {kind:o.listen?"listen":"mc",prompt:o.prompt,opts,speak:o.listen||null,passage:o.txt||null,fig:o.fig||null,
+  return {kind:o.listen?"listen":"mc",fam:o.fam||null,prompt:o.prompt,opts,speak:o.listen||null,passage:o.txt||null,fig:o.fig||null,
     check:i=>opts[i]===o.right,classify:i=>o.errMap&&o.errMap[opts[i]]?o.errMap[opts[i]]:(o.err||null),
     hint:o.hint,sol:o.sol,solText:o.right};
 }
@@ -156,6 +157,7 @@ das Schwimmbad|Schwimmbäder|l
 das Zelt|Zelte|o`.split("\n").map(l=>{const [a,pl,c]=l.split("|");const [art,...w]=a.split(" ");return {art,w:w.join(" "),pl,c}});
 NOUNS.find(n=>n.w==="Banane").pl="Bananen";
 const PHYS=new Set("Tisch Stuhl Baum Koffer Rucksack Computer Teller Tür Wand Lampe Bank Flasche Tasche Jacke Fenster Auto Fahrrad Bett Netz Zelt Tor Schuh Pokal Helm Schläger Heft Buch Uhr Kuchen Bus Zug".split(" "));
+const KOMPOSITA=[["Fußballschuh","der Fußball","der Schuh","der"],["Torwart","das Tor","der Wart","der"],["Schlafzimmer","der Schlaf","das Zimmer","das"],["Fußballhalle","der Fußball","die Halle","die"],["Handschuh","die Hand","der Schuh","der"],["Haustür","das Haus","die Tür","die"],["Sporttasche","der Sport","die Tasche","die"],["Tennisball","das Tennis","der Ball","der"],["Wasserflasche","das Wasser","die Flasche","die"],["Schultasche","die Schule","die Tasche","die"],["Kinderzimmer","das Kind","das Zimmer","das"],["Apfelbaum","der Apfel","der Baum","der"],["Fahrradhelm","das Fahrrad","der Helm","der"],["Zugfenster","der Zug","das Fenster","das"],["Stadtplan","die Stadt","der Plan","der"],["Sportplatz","der Sport","der Platz","der"],["Tischtennis","der Tisch","das Tennis","das"],["Mannschaftsbus","die Mannschaft","der Bus","der"],["Schiedsrichterpfeife","der Schiedsrichter","die Pfeife","die"],["Spielfeld","das Spiel","das Feld","das"]];
 const DEF={der:{N:"der",A:"den",D:"dem"},die:{N:"die",A:"die",D:"der"},das:{N:"das",A:"das",D:"dem"}};
 
 const VERBS=`laufen|läufst|läuft|lief|gelaufen|ist|zum Tor
@@ -215,14 +217,17 @@ const D=(id,o)=>{SK[id]=Object.assign({subj:"D",track:id[0]},o)};
 
 D("G2",{name:"Genus und Plural",y:"Kl. 2–5",pre:[],
   card:{rule:"Jedes Nomen hat ein Geschlecht: der, die oder das. Lern es immer mit – wie einen Teil des Namens.",
-    ex:"die Mannschaft (-schaft → die) · das Mädchen (-chen → das) · der Trainer (-er → oft der)",vocab:"das Genus · el género · gender   |   der Plural · el plural · plural"},
+    ex:"die Mannschaft (-schaft → die) · das Mädchen (-chen → das)\nZusammengesetzt: das letzte Wort entscheidet → der Fußball + der Schuh = der Fußballschuh",vocab:"das Genus · el género · gender   |   der Plural · el plural · plural"},
   sheet:`<p>Im Spanischen gibt es zwei Geschlechter, im Deutschen drei: <b>der</b> (maskulin), <b>die</b> (feminin), <b>das</b> (neutral). Oft hilft die Endung:</p>
    <ul class="clean"><li><b>die</b>: -ung, -heit, -keit, -schaft, -ion, meist -e (die Zeitung, die Mannschaft, die Tasche)</li>
    <li><b>das</b>: -chen, -lein, -um, -ment (das Mädchen, das Stadion)</li>
    <li><b>der</b>: -er bei Personen, -ling, Tage, Monate (der Spieler, der Montag)</li></ul>
    <p><b>Plural</b> – fünf Muster: -e (Schuhe), -er (Bilder, oft mit Umlaut: Häuser), -(e)n (Taschen), -s (Trikots, Handys), ohne Endung (Spieler, Zimmer).</p>
-   <div class="ex">Tipp: Im Plural ist der Artikel immer „die“: die Bälle, die Tore.</div>`,
+   <div class="ex">Tipp: Im Plural ist der Artikel immer „die“: die Bälle, die Tore.</div>
+   <p><b>Zusammengesetzte Nomen:</b> Das <b>letzte</b> Wort bestimmt den Artikel. <i>das Tor + der Wart → der Torwart · der Schlaf + das Zimmer → das Schlafzimmer · der Fußball + die Halle → die Fußballhalle</i></p>`,
   gen(){const n=pick(NOUNS);
+    if(Math.random()<0.25){const k=pick(KOMPOSITA);return mcItem({prompt:`Welcher Artikel passt? <b>___ ${k[0]}</b> <span class="muted">(${k[1]} + ${k[2]})</span>`,right:k[3],wrong:["der","die","das"],max:3,err:"kompositum",fam:"kompositum",
+      hint:"Schau auf das LETZTE Wort. Welchen Artikel hat es allein?",sol:`Das letzte Wort entscheidet: ${k[2]} → <b>${k[3]} ${k[0]}</b>`})}
     if(Math.random()<0.55)return mcItem({prompt:`Welcher Artikel passt? <b>___ ${n.w}</b>`,right:n.art,wrong:["der","die","das"],max:3,err:"genus",
       hint:"Achte auf die Endung. Weißt du es nicht sicher, sprich es dir mit Artikel vor.",sol:`<b>${n.art} ${n.w}</b> – Plural: die ${n.pl}`});
     const sg=n.w,uml=/(ai|au|ei|eu)/.test(sg)?sg+"n":sg.replace(/([aou])([^aeiouäöü]*)$/,(m,v,r)=>({a:"ä",o:"ö",u:"ü"})[v]+r)+"e",cands=[sg+"e",sg+"en",sg+"s",sg+"er",uml,sg];
@@ -498,7 +503,7 @@ D("R1",{name:"Groß- und Kleinschreibung",y:"Kl. 2–4",pre:[],
    <ul class="clean"><li>Artikel-Probe: <i>der Elfmeter</i> ✓ → groß</li><li>Mehrzahl-Probe: <i>die Hände</i> ✓ → groß</li><li>Auch Wochentage, Monate, Länder und Namen: Samstag, November, London</li></ul>
    <p class="muted small">Adjektive (spannend, groß), Verben (spielen) und Präpositionen (mit, nach) schreibt man klein.</p>`,
   gen(){const s=pick(CAP_SENT),toks=s.replace(/([.,])/g," $1").split(" "),answer=new Set();toks.forEach((t,i)=>{if(/^[A-ZÄÖÜ]/.test(t))answer.add(i)});
-    return tapItem({prompt:"Tippe <b>alle Wörter</b> an, die man <b>großschreibt</b>.",tokens:toks,display:toks.map(t=>t.toLowerCase()),answer,err:"gross",
+    return tapItem({prompt:`Hier ist alles klein geschrieben. Tippe <b>alle Wörter</b> an, die man <b>großschreiben</b> muss. <span class="muted">(Es sind ${answer.size}.)</span>`,tokens:toks,display:toks.map(t=>t.toLowerCase()),answer,err:"gross",
       hint:"Satzanfang + jedes Nomen. Probier bei jedem Wort: der/die/das davor?",sol:`<b>${s}</b>`})}
 });
 
@@ -625,8 +630,8 @@ D("R10",{name:"Wörtliche Rede",y:"Kl. 4–5",pre:["R9"],
    WORTSCHATZ
    ===================================================================== */
 const BANK_HINT={W1:"Such den gemeinsamen Wortstamm. Bei Nachsilben: Sprich das Wort laut – was klingt richtig?",W2:"Lies den Satz mit jedem Wort. Welches beschreibt die Situation am genauesten?",W3:"Synonym = gleiche Bedeutung · Gegenteil = das Gegenstück · Oberbegriff = die Gruppe, zu der alle gehören.",W4:"Stell dir die Situation bildlich vor. Was ist eigentlich gemeint?"};
-const bank=(id,name,y,pre,card,sheet,items,err)=>D(id,{name,y,pre,card,sheet,gen(){const x=pick(items);return mcItem({prompt:x[0],right:x[1],wrong:x.slice(2,5),err,hint:BANK_HINT[id],sol:`<b>${x[1]}</b>`})}});
-bank("W1","Wortbausteine und Wortfamilien","Kl. 5–6",[],
+const bank=(id,name,y,pre,card,sheet,items,err)=>D(id,{name,y,pre,card,sheet,gen(){const x=pick(items),komp=/ \+ /.test(x[0]);return mcItem({prompt:x[0],right:x[1],wrong:x.slice(2,5),err:komp?"kompositum":err,fam:komp?"kompositum":(id==="W1"||id==="W3"?undefined:id),hint:komp?"Das LETZTE Wort bestimmt den Artikel.":BANK_HINT[id],sol:komp?`Das letzte Wort entscheidet → <b>${x[1]}</b>`:`<b>${x[1]}</b>`})}});
+bank("W1","Wortbausteine und Wortfamilien","Kl. 5–6",["G2"],
   {rule:"Wörter bestehen aus Bausteinen: Vorsilbe (Präfix) + Stamm + Nachsilbe (Suffix). Wörter mit gleichem Stamm bilden eine Wortfamilie.",ex:"ver-spät-ung · Fahrer, Abfahrt, Fahrrad → Familie „fahren“",vocab:"der Wortstamm · la raíz · stem"},
   `<div class="ex">un + freund + lich → unfreundlich<br>Vorsilben: ver-, be-, ent-, un-, ab-, an-<br>Nachsilben: -ung, -heit, -keit, -schaft (Nomen) · -lich, -ig, -bar, -los (Adjektive)</div>
    <p>Bei zusammengesetzten Nomen bestimmt das <b>letzte</b> Wort den Artikel: der Fußball + der Schuh → <b>der</b> Fußballschuh · das Tor + der Wart → <b>der</b> Torwart.</p>`,
@@ -704,7 +709,7 @@ bank("W4","Redewendungen und feste Verbindungen","Kl. 6",[],
    ===================================================================== */
 const TEXTE=[
 {t:"Aravaca dreht das Spiel",sorte:"Sportbericht",text:`Am Samstag empfing die U12 von Aravaca den Tabellenführer aus Pozuelo. Schon in der fünften Minute gingen die Gäste nach einem Eckball mit 0:1 in Führung. Aravaca wirkte nervös und verlor viele Zweikämpfe. Nach der Pause stellte Trainer Juan auf ein 4-3-3 um. In der 52. Minute köpfte Marco nach einer Flanke von Lucas zum 1:1 ein. Zehn Minuten vor dem Ende lief Otto allein auf den Torwart zu und schob den Ball flach ins linke Eck. Pozuelo drängte bis zum Schluss, doch Torwart Pablo hielt den Sieg fest. Durch das 2:1 rückt Aravaca bis auf einen Punkt an Pozuelo heran.`,
- q:[["L1","Wer schoss das 1:1?","Marco","Lucas","Otto","Pablo"],["L1","Wie stand es zur Halbzeit?","0:1","1:1","2:1","0:0"],["L2","Warum stellte der Trainer wohl um?","Weil seine Mannschaft in der ersten Hälfte schlecht spielte","Weil ein Spieler verletzt war","Weil es zu regnen begann","Weil Pozuelo ein Tor geschossen hatte, das nicht zählte"],
+ q:[["L1","Wer schoss das 1:1?","Marco","Lucas","Otto","Pablo"],["L2","Wie stand es zur Halbzeit?","0:1","1:1","2:1","0:0"],["L2","Warum stellte der Trainer wohl um?","Weil seine Mannschaft in der ersten Hälfte schlecht spielte","Weil ein Spieler verletzt war","Weil es zu regnen begann","Weil Pozuelo ein Tor geschossen hatte, das nicht zählte"],
   ["L3","Was bedeutet „drängte“ in diesem Text?","griff immer wieder an","schob einen Spieler weg","wartete ab","beschwerte sich"],["L4","Woran erkennst du, dass dies ein Sportbericht ist?","Er nennt sachlich Ergebnis, Zeitpunkte und Torschützen im Präteritum","Er erzählt von Gefühlen und Gedanken eines Spielers","Er erklärt Schritt für Schritt, wie man ein Tor schießt","Er reimt sich"]]},
 {t:"Unfall vor der Schule",sorte:"Unfallbericht",text:`Am Dienstag, dem 14. Oktober, kam es gegen 7.45 Uhr vor der Grundschule in der Lindenstraße zu einem Unfall. Ein zehnjähriger Junge überquerte die Straße zwischen zwei parkenden Autos. Ein Radfahrer, der in Richtung Bahnhof fuhr, konnte nicht mehr rechtzeitig bremsen. Er streifte den Jungen am Bein. Der Junge stürzte und schürfte sich das Knie auf. Eine Lehrerin leistete Erste Hilfe und rief die Eltern an. Der Radfahrer blieb unverletzt. Die Polizei weist darauf hin, die Straße nur am Zebrastreifen zu überqueren.`,
  q:[["L1","Um wie viel Uhr geschah der Unfall?","gegen 7.45 Uhr","gegen 8.45 Uhr","am Nachmittag","um 14 Uhr"],["L1","Wer leistete Erste Hilfe?","eine Lehrerin","der Radfahrer","die Polizei","die Eltern"],["L2","Was war die Hauptursache des Unfalls?","Der Junge ging zwischen parkenden Autos über die Straße","Der Radfahrer fuhr zu schnell","Es war dunkel","Die Ampel war kaputt"],
@@ -754,7 +759,7 @@ Object.keys(LNAME).forEach((id,i)=>D(id,{name:LNAME[id],y:["Kl. 4","Kl. 5–6","
   sheet:`<p>${LCARD[id].rule}</p><p><b>Lesestrategie in 3 Schritten:</b></p><ul class="clean"><li>1. Überschrift und erste Sätze lesen: Worum geht es? Welche Textsorte?</li><li>2. Fragen lesen – dann gezielt im Text suchen.</li><li>3. Bei Schlussfolgerungen: Welche Stelle stützt deine Antwort?</li></ul>
    <p class="muted small">Textsorten in Klasse 6 (DSM): Beschreibung, Lügen- und Schelmengeschichte, Sport- und Unfallbericht, Sage, Fabel, Gedicht.</p>`,
   gen(){const pool=[];TEXTE.forEach((tx,ti)=>tx.q.forEach((q,qi)=>{if(q[0]===id)pool.push([ti,qi])}));const [ti,qi]=pick(pool),tx=TEXTE[ti],q=tx.q[qi];
-    return mcItem({prompt:q[1],right:q[2],wrong:q.slice(3),err:LERR[id],txt:{title:tx.t,sorte:tx.sorte,text:tx.text},
+    return mcItem({prompt:q[1],right:q[2],wrong:q.slice(3),err:LERR[id],fam:id,txt:{title:tx.t,sorte:tx.sorte,text:tx.text},
       hint:ERR[LERR[id]],sol:`<b>${q[2]}</b>`})}
 }));
 
